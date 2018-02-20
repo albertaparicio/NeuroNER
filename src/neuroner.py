@@ -24,7 +24,6 @@ import utils
 import utils_nlp
 from entity_lstm import EntityLSTM
 
-matplotlib.use('Agg')
 
 # https://stackoverflow.com/q/42217532
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'

@@ -17,6 +17,7 @@ from argparse import RawTextHelpFormatter
 from distutils.util import strtobool
 from pprint import pprint
 
+import matplotlib
 from six.moves import configparser
 
 import brat_to_conll
@@ -26,6 +27,7 @@ import utils_nlp
 from neuroner import NeuroNER
 
 warnings.filterwarnings('ignore')
+matplotlib.use('Agg')
 
 
 def load_parameters(parameters_filepath, arguments={}, verbose=True):
