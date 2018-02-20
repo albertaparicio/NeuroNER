@@ -6,3 +6,6 @@
 *.pydevproject
 output/*
 data/*
+/src/.ropeproject/
+/trained_models/
+.idea/
