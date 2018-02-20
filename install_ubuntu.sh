@@ -12,7 +12,7 @@ sudo mv  /usr/local/bin/pip /usr/local/bin/pip3
 sudo ln -s /usr/local/bin/pip2.7 /usr/local/bin/pip
 
 # To install TensorFlow:
-sudo pip3 install tensorflow
+sudo pip3 install tensorflow-gpu
 
 # To install a few more packages which NeuroNER depends on:
 sudo pip3 install -U networkx matplotlib scikit-learn scipy pycorenlp
