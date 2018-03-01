@@ -170,10 +170,10 @@ def check_contents_of_dataset_and_model_checkpoint(model_folder):
 
 
 if __name__ == '__main__':
-  output_folder_name = 'quantico_script_v3_2017-07-20_17-08-01-91115'
+  output_folder_name = '00_All_data_2018-02-22_11-17-01-645700'
   # output_folder_name = 'en_2017-05-05_08-58-32-633799'
-  epoch_number = 74
-  model_name = 'quantico_model_v3'
+  epoch_number = 90
+  model_name = 'all_data_model'
   delete_token_mappings = False
   prepare_pretrained_model_for_restoring(output_folder_name, epoch_number,
                                          model_name, delete_token_mappings)
