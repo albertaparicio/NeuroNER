@@ -5,6 +5,7 @@ import pickle
 import random
 import re
 import time
+from collections import Counter
 
 import sklearn.preprocessing
 
@@ -19,6 +20,7 @@ class Dataset(object):
     self.name = name
     self.verbose = verbose
     self.debug = debug
+    self.class_weights = {}
 
   def _parse_dataset(self, dataset_filepath):
     token_count = collections.defaultdict(lambda: 0)
@@ -89,16 +91,17 @@ class Dataset(object):
         characters[dataset_type].append([list(token) for token in token_sequence])
         character_indices[dataset_type].append([[character_to_index.get(character,
                                                                         random.randint(
-                                                                          1, max(
-                                                                            self.index_to_character.keys())))
+                                                                            1, max(
+                                                                                self.index_to_character.keys())))
                                                  for character in token] for token in
                                                 token_sequence])
         token_lengths[dataset_type].append([len(token) for token in token_sequence])
         longest_token_length_in_sequence = max(token_lengths[dataset_type][-1])
         character_indices_padded[dataset_type].append([utils.pad_list(
-          temp_token_indices, longest_token_length_in_sequence,
-          self.PADDING_CHARACTER_INDEX) for temp_token_indices in character_indices[
-                                                         dataset_type][-1]])
+            temp_token_indices, longest_token_length_in_sequence,
+            self.PADDING_CHARACTER_INDEX) for temp_token_indices in
+          character_indices[
+            dataset_type][-1]])
 
       label_indices[dataset_type] = []
       for label_sequence in labels[dataset_type]:
@@ -110,13 +113,13 @@ class Dataset(object):
           token_lengths['train'][0][0:10]))
     if self.verbose:
       print(
-        'characters[\'train\'][0][0:10]: {0}'.format(characters['train'][0][0:10]))
+          'characters[\'train\'][0][0:10]: {0}'.format(characters['train'][0][0:10]))
     if self.verbose:
       print(
-        'token_indices[\'train\'][0:10]: {0}'.format(token_indices['train'][0:10]))
+          'token_indices[\'train\'][0:10]: {0}'.format(token_indices['train'][0:10]))
     if self.verbose:
       print(
-        'label_indices[\'train\'][0:10]: {0}'.format(label_indices['train'][0:10]))
+          'label_indices[\'train\'][0:10]: {0}'.format(label_indices['train'][0:10]))
     if self.verbose:
       print('character_indices[\'train\'][0][0:10]: {0}'.format(
           character_indices['train'][0][0:10]))
@@ -131,14 +134,14 @@ class Dataset(object):
       label_vector_indices[dataset_type] = []
       for label_indices_sequence in label_indices[dataset_type]:
         label_vector_indices[dataset_type].append(
-          label_binarizer.transform(label_indices_sequence))
+            label_binarizer.transform(label_indices_sequence))
 
     if self.verbose:
       print('label_vector_indices[\'train\'][0:2]: {0}'.format(
           label_vector_indices['train'][0:2]))
     if self.verbose:
       print('len(label_vector_indices[\'train\']): {0}'.format(
-        len(label_vector_indices['train'])))
+          len(label_vector_indices['train'])))
 
     return token_indices, label_indices, character_indices_padded, \
            character_indices, token_lengths, characters, label_vector_indices
@@ -152,11 +155,11 @@ class Dataset(object):
     for dataset_type in dataset_types:
       self.labels[dataset_type], self.tokens[
         dataset_type], _, _, _ = self._parse_dataset(
-        dataset_filepaths.get(dataset_type, None))
+          dataset_filepaths.get(dataset_type, None))
 
     token_indices, label_indices, character_indices_padded, character_indices, \
     token_lengths, characters, label_vector_indices = self._convert_to_indices(
-      dataset_types)
+        dataset_types)
 
     self.token_indices.update(token_indices)
     self.label_indices.update(label_indices)
@@ -187,11 +190,11 @@ class Dataset(object):
     all_characters_in_pretraining_dataset = []
     if parameters['use_pretrained_model']:
       pretraining_dataset = pickle.load(
-        open(os.path.join(parameters['pretrained_model_folder'], 'dataset.pickle'),
-             'rb'))
+          open(os.path.join(parameters['pretrained_model_folder'], 'dataset.pickle'),
+               'rb'))
       all_tokens_in_pretraining_dataset = pretraining_dataset.index_to_token.values()
       all_characters_in_pretraining_dataset = \
-          pretraining_dataset.index_to_character.values()
+        pretraining_dataset.index_to_character.values()
 
     remap_to_unk_count_threshold = 1
     self.UNK_TOKEN_INDEX = 0
@@ -211,7 +214,8 @@ class Dataset(object):
 
       if self.verbose: print("dataset_type: {0}".format(dataset_type))
       if self.verbose: print(
-        "len(token_count[dataset_type]): {0}".format(len(token_count[dataset_type])))
+          "len(token_count[dataset_type]): {0}".format(
+              len(token_count[dataset_type])))
 
     token_count['all'] = {}
     for token in list(token_count['train'].keys()) + list(
@@ -247,7 +251,8 @@ class Dataset(object):
     for dataset_type in dataset_filepaths.keys():
       if self.verbose: print("dataset_type: {0}".format(dataset_type))
       if self.verbose: print(
-        "len(token_count[dataset_type]): {0}".format(len(token_count[dataset_type])))
+          "len(token_count[dataset_type]): {0}".format(
+              len(token_count[dataset_type])))
 
     label_count['all'] = {}
     for character in list(label_count['train'].keys()) + list(
@@ -265,7 +270,7 @@ class Dataset(object):
     character_count['all'] = utils.order_dictionary(character_count['all'], 'value',
                                                     reverse=True)
     if self.verbose: print(
-      'character_count[\'all\']: {0}'.format(character_count['all']))
+        'character_count[\'all\']: {0}'.format(character_count['all']))
 
     token_to_index = {}
     token_to_index[self.UNK] = self.UNK_TOKEN_INDEX
@@ -274,7 +279,7 @@ class Dataset(object):
     if self.verbose: print("parameters['remap_unknown_tokens_to_unk']: {0}".format(
         parameters['remap_unknown_tokens_to_unk']))
     if self.verbose: print("len(token_count['train'].keys()): {0}".format(
-      len(token_count['train'].keys())))
+        len(token_count['train'].keys())))
     for token, count in token_count['all'].items():
       if iteration_number == self.UNK_TOKEN_INDEX: iteration_number += 1
 
@@ -287,7 +292,7 @@ class Dataset(object):
         if self.verbose: print("token: {0}".format(token))
         if self.verbose: print("token.lower(): {0}".format(token.lower()))
         if self.verbose: print("re.sub('\d', '0', token.lower()): {0}".format(
-          re.sub('\d', '0', token.lower())))
+            re.sub('\d', '0', token.lower())))
         token_to_index[token] = self.UNK_TOKEN_INDEX
         number_of_unknown_tokens += 1
         self.tokens_mapped_to_unk.append(token)
@@ -295,16 +300,16 @@ class Dataset(object):
         token_to_index[token] = iteration_number
         iteration_number += 1
     if self.verbose: print(
-      "number_of_unknown_tokens: {0}".format(number_of_unknown_tokens))
+        "number_of_unknown_tokens: {0}".format(number_of_unknown_tokens))
 
     infrequent_token_indices = []
     for token, count in token_count['train'].items():
       if 0 < count <= remap_to_unk_count_threshold:
         infrequent_token_indices.append(token_to_index[token])
     if self.verbose: print(
-      "len(token_count['train']): {0}".format(len(token_count['train'])))
+        "len(token_count['train']): {0}".format(len(token_count['train'])))
     if self.verbose: print(
-      "len(infrequent_token_indices): {0}".format(len(infrequent_token_indices)))
+        "len(infrequent_token_indices): {0}".format(len(infrequent_token_indices)))
 
     # Ensure that both B- and I- versions exist for each label
     labels_without_bio = set()
@@ -331,11 +336,11 @@ class Dataset(object):
       for label in label_count['all']:
         if label not in pretraining_dataset.label_to_index:
           raise AssertionError(
-            "The label {0} does not exist in the pretraining dataset. ".format(
-              label) +
-            "Please ensure that only the following labels exist in the dataset: {"
-            "0}".format(
-              ', '.join(self.unique_labels)))
+              "The label {0} does not exist in the pretraining dataset. ".format(
+                  label) +
+              "Please ensure that only the following labels exist in the dataset: {"
+              "0}".format(
+                  ', '.join(self.unique_labels)))
       label_to_index = pretraining_dataset.label_to_index.copy()
     else:
       label_to_index = {}
@@ -364,7 +369,7 @@ class Dataset(object):
     if self.verbose: print('index_to_token: {0}'.format(index_to_token))
 
     if self.verbose: print(
-      'label_count[\'train\']: {0}'.format(label_count['train']))
+        'label_count[\'train\']: {0}'.format(label_count['train']))
     label_to_index = utils.order_dictionary(label_to_index, 'value', reverse=False)
     if self.verbose: print('label_to_index: {0}'.format(label_to_index))
     index_to_label = utils.reverse_dictionary(label_to_index)
@@ -377,9 +382,9 @@ class Dataset(object):
     if self.verbose: print('index_to_character: {0}'.format(index_to_character))
 
     if self.verbose: print(
-      'labels[\'train\'][0:10]: {0}'.format(labels['train'][0:10]))
+        'labels[\'train\'][0:10]: {0}'.format(labels['train'][0:10]))
     if self.verbose: print(
-      'tokens[\'train\'][0:10]: {0}'.format(tokens['train'][0:10]))
+        'tokens[\'train\'][0:10]: {0}'.format(tokens['train'][0:10]))
 
     if self.verbose:
       # Print sequences of length 1 in train set
@@ -394,15 +399,15 @@ class Dataset(object):
     self.index_to_label = index_to_label
     self.label_to_index = label_to_index
     if self.verbose: print(
-      "len(self.token_to_index): {0}".format(len(self.token_to_index)))
+        "len(self.token_to_index): {0}".format(len(self.token_to_index)))
     if self.verbose: print(
-      "len(self.index_to_token): {0}".format(len(self.index_to_token)))
+        "len(self.index_to_token): {0}".format(len(self.index_to_token)))
     self.tokens = tokens
     self.labels = labels
 
     token_indices, label_indices, character_indices_padded, character_indices, \
     token_lengths, characters, label_vector_indices = self._convert_to_indices(
-      dataset_filepaths.keys())
+        dataset_filepaths.keys())
 
     self.token_indices = token_indices
     self.label_indices = label_indices
@@ -416,7 +421,7 @@ class Dataset(object):
     self.vocabulary_size = max(self.index_to_token.keys()) + 1
     self.alphabet_size = max(self.index_to_character.keys()) + 1
     if self.verbose: print(
-      "self.number_of_classes: {0}".format(self.number_of_classes))
+        "self.number_of_classes: {0}".format(self.number_of_classes))
     if self.verbose: print("self.alphabet_size: {0}".format(self.alphabet_size))
     if self.verbose: print("self.vocabulary_size: {0}".format(self.vocabulary_size))
 
@@ -431,9 +436,16 @@ class Dataset(object):
     self.infrequent_token_indices = infrequent_token_indices
 
     if self.verbose: print(
-      'self.unique_labels_of_interest: {0}'.format(self.unique_labels_of_interest))
+        'self.unique_labels_of_interest: {0}'.format(self.unique_labels_of_interest))
     if self.verbose: print('self.unique_label_indices_of_interest: {0}'.format(
-      self.unique_label_indices_of_interest))
+        self.unique_label_indices_of_interest))
+
+    # Compute class weights
+    flat_labels = [item for sublist in label_indices['train'] for item in sublist]
+    c = Counter(flat_labels)
+
+    for key, val in c.items():
+      self.class_weights[key] = c.most_common(1)[0][-1] / val
 
     elapsed_time = time.time() - start_time
     print('done ({0:.2f} seconds)'.format(elapsed_time))
