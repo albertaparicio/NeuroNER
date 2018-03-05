@@ -9,7 +9,6 @@ import time
 from distutils.util import strtobool
 from pprint import pprint
 
-import matplotlib
 import numpy as np
 import tensorflow as tf
 from six.moves import configparser
@@ -23,7 +22,6 @@ import train
 import utils
 import utils_nlp
 from entity_lstm import EntityLSTM
-
 
 # https://stackoverflow.com/q/42217532
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'

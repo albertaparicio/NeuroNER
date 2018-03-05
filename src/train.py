@@ -21,7 +21,9 @@ def train_step(sess, dataset, sequence_number, model, parameters):
       model.input_token_character_indices: dataset.character_indices_padded['train'][sequence_number],
       model.input_token_lengths: dataset.token_lengths['train'][sequence_number],
       model.input_label_indices_flat: dataset.label_indices['train'][sequence_number],
-      model.dropout_keep_prob: 1-parameters['dropout_rate']
+      model.dropout_keep_prob: 1-parameters['dropout_rate'],
+      model.class_weights:[dataset.class_weights[i] for i in
+              dataset.label_indices['train'][sequence_number]]
     }
     _, _, loss, accuracy, transition_params_trained = sess.run(
                     [model.train_op, model.global_step, model.loss, model.accuracy, model.transition_parameters],

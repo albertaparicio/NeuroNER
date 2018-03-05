@@ -93,6 +93,8 @@ class EntityLSTM(object):
     self.input_token_lengths = tf.placeholder(
         tf.int32, [None], name="input_token_lengths")
     self.dropout_keep_prob = tf.placeholder(tf.float32, name="dropout_keep_prob")
+    self.class_weights = tf.placeholder(
+        tf.float32, [None], name="class_weights")
 
     # Internal parameters
     initializer = tf.contrib.layers.xavier_initializer()
@@ -276,10 +278,15 @@ class EntityLSTM(object):
 
       # Calculate mean cross-entropy loss
       with tf.variable_scope("loss"):
-        losses = tf.nn.softmax_cross_entropy_with_logits(logits=self.unary_scores,
-                                                         labels=self.input_label_indices_vector,
-                                                         name='softmax')
-        self.loss = tf.reduce_mean(losses, name='cross_entropy_mean_loss')
+        self.raw_losses = tf.nn.softmax_cross_entropy_with_logits_v2(
+            logits=self.unary_scores,
+            labels=self.input_label_indices_vector,
+            name='softmax')
+        self.weighted_losses = tf.multiply(self.raw_losses, self.class_weights,
+                                           name='weighted_losses')
+
+        self.loss = tf.reduce_mean(self.weighted_losses,
+                                   name='cross_entropy_mean_loss')
       with tf.variable_scope("accuracy"):
         correct_predictions = tf.equal(self.predictions,
                                        tf.argmax(self.input_label_indices_vector, 1))
@@ -306,11 +313,12 @@ class EntityLSTM(object):
 
     grads_and_vars = self.optimizer.compute_gradients(self.loss)
     if parameters['gradient_clipping_value']:
-      grads_and_vars = [(tf.clip_by_value(grad,
-                                          -parameters['gradient_clipping_value'],
-                                          parameters['gradient_clipping_value']),
-                         var)
-                        for grad, var in grads_and_vars]
+      grads_and_vars = [
+        (tf.clip_by_value(grad, -parameters['gradient_clipping_value'],
+                          parameters['gradient_clipping_value']), var)
+        if grad is not None else (grad, var)
+        for grad, var in grads_and_vars
+        ]
     # By defining a global_step variable and passing it to the optimizer we allow
     # TensorFlow handle the counting of training steps for us.
     # The global step will be automatically incremented by one every time you
