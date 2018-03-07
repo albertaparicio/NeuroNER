@@ -440,12 +440,13 @@ class Dataset(object):
     if self.verbose: print('self.unique_label_indices_of_interest: {0}'.format(
         self.unique_label_indices_of_interest))
 
-    # Compute class weights
-    flat_labels = [item for sublist in label_indices['train'] for item in sublist]
-    c = Counter(flat_labels)
+    # Compute class weights if we are training the model
+    if parameters['train_model']:
+      flat_labels = [item for sublist in label_indices['train'] for item in sublist]
+      c = Counter(flat_labels)
 
-    for key, val in c.items():
-      self.class_weights[key] = c.most_common(1)[0][-1] / val
+      for key, val in c.items():
+        self.class_weights[key] = c.most_common(1)[0][-1] / val
 
     elapsed_time = time.time() - start_time
     print('done ({0:.2f} seconds)'.format(elapsed_time))

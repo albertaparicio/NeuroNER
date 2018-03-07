@@ -18,6 +18,10 @@ def train_step(sess, dataset, sequence_number, model, parameters):
   for i, token_index in enumerate(token_indices_sequence):
     if token_index in dataset.infrequent_token_indices and np.random.uniform() < 0.5:
       token_indices_sequence[i] = dataset.UNK_TOKEN_INDEX
+
+  # TODO Oversample Location sequences
+  # print()
+
   feed_dict = {
     model.input_token_indices          : token_indices_sequence,
     model.input_label_indices_vector   : dataset.label_vector_indices['train'][
@@ -121,7 +125,7 @@ def prediction_step(sess, dataset, dataset_type, model, transition_params_traine
     else:
       new_y_pred, new_y_true, new_label_indices, new_label_names, _, \
       _ = remap_labels(
-        all_predictions, all_y_true, dataset, parameters['main_evaluation_mode'])
+          all_predictions, all_y_true, dataset, parameters['main_evaluation_mode'])
       print(sklearn.metrics.classification_report(new_y_true, new_y_pred, digits=4,
                                                   labels=new_label_indices,
                                                   target_names=new_label_names))

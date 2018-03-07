@@ -8,6 +8,7 @@ import shutil
 import time
 from distutils.util import strtobool
 from pprint import pprint
+from random import uniform
 
 import numpy as np
 import tensorflow as tf
@@ -494,13 +495,24 @@ class NeuroNER(object):
           sequence_numbers = list(range(len(dataset.token_indices['train'])))
           random.shuffle(sequence_numbers)
           for sequence_number in sequence_numbers:
-            transition_params_trained = train.train_step(sess, dataset,
-                                                         sequence_number, model,
-                                                         parameters)
-            step += 1
-            if step % 10 == 0:
-              print('Training {0:.2f}% done'.format(
-                  step / len(sequence_numbers) * 100), end='\r', flush=True)
+            do_train = False
+
+            # Train on 30% of sequences with all 'O' tokens
+            if dataset.labels['train'][sequence_number].count('O') == len(
+                dataset.labels['train'][sequence_number]):
+              if uniform(0, 1) <= 0.3:
+                do_train = True
+            else:
+              do_train = True
+
+            if do_train:
+              transition_params_trained = train.train_step(sess, dataset,
+                                                           sequence_number, model,
+                                                           parameters)
+              step += 1
+              if step % 10 == 0:
+                print('Training {0:.2f}% done'.format(
+                    step / len(sequence_numbers) * 100), end='\r', flush=True)
 
         epoch_elapsed_training_time = time.time() - epoch_start_time
         print('Training completed in {0:.2f} seconds'.format(
